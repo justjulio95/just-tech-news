@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const {User, Post} = require('../../models')
+const {User, Post, Vote} = require('../../models');
 
 // GET /api/users
 router.get('/', (req, res) => {
@@ -25,6 +25,12 @@ router.get('/:id', (req, res) => {
             {
                 model: Post,
                 attributes: ['id', 'title', 'post_url', 'created_at']
+            },
+            {
+                model: Post,
+                attributes: ['title'],
+                through: Vote,
+                as: 'voted_posts'
             }
         ]
     })
@@ -33,17 +39,17 @@ router.get('/:id', (req, res) => {
             res.status(404).json({message: 'No user found with this id'});
             return;
         }
-        res.json(dbUserData)
+        res.json(dbUserData);
     })
     .catch(err => {
         console.log(err);
         res.status(500).json(err);
-    })
+    });
 });
 
 // POST /api/users
 router.post('/', (req, res) => {
-    // expects {usersname: 'username', email: '<some>@<thing>.<string>', password:'password'}
+    // expects {username: 'username', email: '<some>@<thing>.<string>', password:'password'}
     User.create({
         username: req.body.username,
         email: req.body.email,
@@ -53,7 +59,7 @@ router.post('/', (req, res) => {
     .catch(err => {
         console.log(err);
         res.status(500).json(err);
-    })
+    });
 });
 
 router.post('/login', (req, res) => {
@@ -65,7 +71,7 @@ router.post('/login', (req, res) => {
     }).then(dbUserData => {
         if(!dbUserData) {
             res.status(400).json({message: 'No user with that email address!'});
-            return
+            return;
         }
         //Verify user
         const validPassword = dbUserData.checkPassword(req.body.password);
@@ -75,8 +81,8 @@ router.post('/login', (req, res) => {
             return;
         }
         res.json({user: dbUserData, message: 'You are now logged in!'});
-    })
-})
+    });
+});
 
 // PUT /api/users/1
 router.put('/:id', (req, res) => {
@@ -117,7 +123,7 @@ router.delete('/:id', (req, res) => {
     .catch(err => {
         console.log(err);
         res.status(500).json(err);
-    })
+    });
 });
 
 module.exports = router;
